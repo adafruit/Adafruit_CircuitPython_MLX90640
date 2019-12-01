@@ -1,10 +1,13 @@
 from adafruit_bus_device.i2c_device import I2CDevice
 import struct
 import math
+import time
 
 eeData = [0] * 832
-I2C_READ_LEN = 100
+I2C_READ_LEN = 1024
 SCALEALPHA = 0.000001
+MLX90640_DEVICEID1 = 0x2407
+OPENAIR_TA_SHIFT = 8
 
 class MLX90640:
     """Interface to the MLX90640 temperature sensor."""
@@ -40,6 +43,177 @@ class MLX90640:
         #print(eeData)
         self._ExtractParameters()
 
+    @property
+    def serial_number(self):
+        serialWords = [0, 0, 0]
+        self._I2CReadWords(MLX90640_DEVICEID1, serialWords)
+        return serialWords
+
+    def getFrame(self, framebuf):
+        emissivity = 0.95
+        tr = 23.15
+        mlx90640Frame = [0] * 834
+
+        for page in range(2):
+            status = self._GetFrameData(mlx90640Frame)
+            if status < 0:
+                raise RuntimeError("Frame data error")
+            print([hex(i) for i in mlx90640Frame])
+            ta = self._GetTa(mlx90640Frame) - OPENAIR_TA_SHIFT # For a MLX90640 in the open air the shift is -8 degC.
+            print("Ta = ", ta)
+
+            self._CalculateTo(mlx90640Frame, emissivity, ta, framebuf)
+        #print(framebuf)
+        
+    def _GetFrameData(self, frameData):
+        dataReady = 0
+        cnt = 0
+        statusRegister = [0]
+        controlRegister = [0]
+        
+        while dataReady == 0:
+            self._I2CReadWords(0x8000, statusRegister)
+            dataReady = statusRegister[0] & 0x0008
+            print("ready status: 0x%x" % dataReady)
+        
+        while (dataReady != 0) and (cnt < 5):
+            self._I2CWriteWord(0x8000, 0x0030)
+            print("Read frame", cnt)
+            self._I2CReadWords(0x0400, frameData, end=832)
+
+            self._I2CReadWords(0x8000, statusRegister)
+            dataReady = statusRegister[0] & 0x0008
+            print("frame ready: 0x%x" % dataReady)
+            cnt += 1
+
+        if cnt > 4:
+            raise RuntimeError("Too many retries")
+
+        self._I2CReadWords(0x800D, controlRegister)
+        frameData[832] = controlRegister[0]
+        frameData[833] = statusRegister[0] & 0x0001
+        return frameData[833]
+
+    def _GetTa(self, frameData):
+        vdd = self._GetVdd(frameData)
+        ptat = frameData[800]
+        if ptat > 32767:
+            ptat -= 65536
+        ptatArt = frameData[768]
+        if ptatArt > 32767:
+            ptatArt -= 65536
+        ptatArt = (ptat / (ptat * self.alphaPTAT + ptatArt)) * math.pow(2, 18)
+    
+        ta = (ptatArt / (1 + self.KvPTAT * (vdd - 3.3)) - self.vPTAT25)
+        ta /= self.KtPTAT + 25
+    
+        return ta
+
+    def _GetVdd(self, frameData):
+        vdd = frameData[810]
+        if vdd > 32767:
+            vdd -= 65536
+
+        resolutionRAM = (frameData[832] & 0x0C00) >> 10
+        resolutionCorrection = math.pow(2, self.resolutionEE) / math.pow(2, resolutionRAM)
+        vdd = (resolutionCorrection * vdd - self.vdd25) / self.kVdd + 3.3
+    
+        return vdd
+
+
+    def _CalculateTo(self, frameData, emissivity, tr, result):
+        subPage = frameData[833]
+        alphaCorrR  = [0] * 4
+        irDataCP = [0, 0]
+
+        vdd = self._GetVdd(frameData)
+        ta = self._GetTa(frameData)
+    
+        ta4 = (ta + 273.15)
+        ta4 = ta4 * ta4
+        ta4 = ta4 * ta4
+        tr4 = (tr + 273.15)
+        tr4 = tr4 * tr4
+        tr4 = tr4 * tr4
+        taTr = tr4 - (tr4-ta4)/emissivity
+    
+        ktaScale = math.pow(2, self.ktaScale)
+        kvScale = math.pow(2, self.kvScale)
+        alphaScale = math.pow(2, self.alphaScale)
+    
+        alphaCorrR[0] = 1 / (1 +self.ksTo[0] * 40)
+        alphaCorrR[1] = 1
+        alphaCorrR[2] = (1 + self.ksTo[1] * self.ct[2]);
+        alphaCorrR[3] = alphaCorrR[2] * (1 + self.ksTo[2] * (self.ct[3] - self.ct[2]));
+    
+        #------------------------- Gain calculation -----------------------------------    
+        gain = frameData[778]
+        if gain > 32767:
+            gain -= 65536
+        gain = self.gainEE / gain
+  
+        #------------------------- To calculation -------------------------------------    
+        mode = (frameData[832] & 0x1000) >> 5
+    
+        irDataCP[0] = frameData[776]
+        irDataCP[1] = frameData[808]
+        for i in range(2):
+            if irDataCP[i] > 32767:
+                irDataCP[i] -= 65536
+            irDataCP[i] *= gain
+    
+        irDataCP[0] = irDataCP[0] - self.cpOffset[0] * (1 + self.cpKta * (ta - 25)) * (1 + self.cpKv * (vdd - 3.3))
+        if  mode == self.calibrationModeEE: #MEME check float/uint
+            irDataCP[1] = irDataCP[1] - self.cpOffset[1] * (1 + self.cpKta * (ta - 25)) * (1 + self.cpKv * (vdd - 3.3))
+        else:
+            irDataCP[1] = irDataCP[1] - (self.cpOffset[1] + self.ilChessC[0]) * (1 + self.cpKta * (ta - 25)) * (1 + self.cpKv * (vdd - 3.3))
+
+        for pixelNumber in range(768):
+            ilPattern = pixelNumber // 32 - (pixelNumber // 64) * 2; 
+            chessPattern = ilPattern ^ (pixelNumber - (pixelNumber//2)*2); 
+            conversionPattern = ((pixelNumber + 2) // 4 - (pixelNumber + 3) // 4 + (pixelNumber + 1) // 4 - pixelNumber // 4) * (1 - 2 * ilPattern)
+        
+            if mode == 0:
+                pattern = ilPattern
+            else:
+                pattern = chessPattern
+
+            if pattern == frameData[833]:
+                irData = frameData[pixelNumber]
+                if irData > 32767:
+                    irData -= 65536
+                irData *= gain;
+            
+                kta = self.kta[pixelNumber]/ktaScale
+                kv = self.kv[pixelNumber]/kvScale
+                irData -= self.offset[pixelNumber]*(1 + kta*(ta - 25))*(1 + kv*(vdd - 3.3))
+            
+                if mode != self.calibrationModeEE:
+                   irData += self.ilChessC[2] * (2 * ilPattern - 1) - self.ilChessC[1] * conversionPattern; 
+    
+                irData = irData - self.tgc * irDataCP[subPage];
+                irData /= emissivity
+
+                alphaCompensated = SCALEALPHA * alphaScale/self.alpha[pixelNumber]
+                alphaCompensated = alphaCompensated * (1 + self.KsTa * (ta - 25))
+
+                Sx = alphaCompensated * alphaCompensated * alphaCompensated * (irData + alphaCompensated * taTr)
+                Sx = math.sqrt(math.sqrt(Sx)) * self.ksTo[1]
+
+                To = math.sqrt(math.sqrt(irData/(alphaCompensated * (1 - self.ksTo[1] * 273.15) + Sx) + taTr)) - 273.15;
+
+                if To < self.ct[1]:
+                    torange = 0
+                elif To < self.ct[2]:
+                    torange = 1
+                elif To < self.ct[3]:
+                    torange = 2
+                else:
+                    torange = 3
+
+                To = math.sqrt(math.sqrt(irData / (alphaCompensated * alphaCorrR[torange] * (1 + self.ksTo[torange] * (To - self.ct[torange]))) + taTr)) - 273.15
+
+                result[pixelNumber] = To
 
     def _ExtractParameters(self):
         self._ExtractVDDParameters()
@@ -78,7 +252,6 @@ class MLX90640:
         print('-'*40)
         """
 
-        
     def _ExtractVDDParameters(self):
         # extract VDD
         self.kVdd = (eeData[51] & 0xFF00) >> 8
@@ -453,22 +626,49 @@ class MLX90640:
         print("Found %d broken pixels, %d outliers" % (brokenPixCnt, outlierPixCnt))
         # TODO INCOMPLETE
 
-    def _I2CReadWords(self, addr, buffer):
-        remainingWords = len(buffer)
+    def _I2CWriteWord(self, writeAddress, data):
+        cmd = bytearray(4)
+        cmd[0] = writeAddress >> 8
+        cmd[1] = writeAddress & 0x00FF
+        cmd[2] = data >> 8
+        cmd[3] = data & 0x00FF
+        dataCheck = [0]
+        
+        with self.i2c_device as i2c:
+            i2c.write(cmd)
+        print("Wrote:", [hex(i) for i in cmd])
+        time.sleep(0.001)
+        self._I2CReadWords(writeAddress, dataCheck)
+        print("dataCheck: 0x%x" % dataCheck[0])
+        """
+        if (dataCheck != data):
+            return -2
+        """
+
+    def _I2CReadWords(self, addr, buffer, *, end=None):
+        stamp = time.monotonic()
+        if end is None:
+            remainingWords = len(buffer)
+        else:
+            remainingWords = end
         offset = 0
         addrbuf = bytearray(2)
         inbuf = bytearray(2 * I2C_READ_LEN)
+
+
         with self.i2c_device as i2c:
             while remainingWords:
                 addrbuf[0] = addr >> 8    # MSB
                 addrbuf[1] = addr & 0xFF  # LSB
                 read_words = min(remainingWords, I2C_READ_LEN)
-                i2c.write(addrbuf, stop=False)
-                i2c.readinto(inbuf, end=read_words*2) # in bytes
+                i2c.write_then_readinto(addrbuf, inbuf, in_end=read_words*2) # in bytes
+                #print("-> ", [hex(i) for i in addrbuf])
                 outwords = struct.unpack('>' + 'H' * read_words, inbuf[0:read_words*2])
+                #print("<- (", read_words, ")", [hex(i) for i in outwords[0:10]])
                 for i, w in enumerate(outwords):
                     buffer[offset+i] = w
                 offset += read_words
                 remainingWords -= read_words
                 addr += read_words
-        #print([hex(i) for i in buffer])
+        print("i2c read ", read_words, time.monotonic()-stamp)
+        #print("Read: ", [hex(i) for i in buffer[0:10]])
