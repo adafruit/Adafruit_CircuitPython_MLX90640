@@ -58,12 +58,8 @@ class MLX90640:
             status = self._GetFrameData(mlx90640Frame)
             if status < 0:
                 raise RuntimeError("Frame data error")
-            print([hex(i) for i in mlx90640Frame])
-            ta = self._GetTa(mlx90640Frame) - OPENAIR_TA_SHIFT # For a MLX90640 in the open air the shift is -8 degC.
-            print("Ta = ", ta)
-
-            self._CalculateTo(mlx90640Frame, emissivity, ta, framebuf)
-        #print(framebuf)
+            tr = self._GetTa(mlx90640Frame) - OPENAIR_TA_SHIFT # For a MLX90640 in the open air the shift is -8 degC.
+            self._CalculateTo(mlx90640Frame, emissivity, tr, framebuf)
         
     def _GetFrameData(self, frameData):
         dataReady = 0
@@ -74,16 +70,16 @@ class MLX90640:
         while dataReady == 0:
             self._I2CReadWords(0x8000, statusRegister)
             dataReady = statusRegister[0] & 0x0008
-            print("ready status: 0x%x" % dataReady)
+            #print("ready status: 0x%x" % dataReady)
         
         while (dataReady != 0) and (cnt < 5):
             self._I2CWriteWord(0x8000, 0x0030)
-            print("Read frame", cnt)
+            #print("Read frame", cnt)
             self._I2CReadWords(0x0400, frameData, end=832)
 
             self._I2CReadWords(0x8000, statusRegister)
             dataReady = statusRegister[0] & 0x0008
-            print("frame ready: 0x%x" % dataReady)
+            #print("frame ready: 0x%x" % dataReady)
             cnt += 1
 
         if cnt > 4:
@@ -96,17 +92,18 @@ class MLX90640:
 
     def _GetTa(self, frameData):
         vdd = self._GetVdd(frameData)
+
         ptat = frameData[800]
         if ptat > 32767:
             ptat -= 65536
+
         ptatArt = frameData[768]
         if ptatArt > 32767:
             ptatArt -= 65536
         ptatArt = (ptat / (ptat * self.alphaPTAT + ptatArt)) * math.pow(2, 18)
-    
+
         ta = (ptatArt / (1 + self.KvPTAT * (vdd - 3.3)) - self.vPTAT25)
-        ta /= self.KtPTAT + 25
-    
+        ta = ta / self.KtPTAT + 25    
         return ta
 
     def _GetVdd(self, frameData):
@@ -242,7 +239,7 @@ class MLX90640:
         print("cpAlpha:", self.cpAlpha, "cpOffset:", self.cpOffset)
         print("alpha: ", self.alpha)
         print("alphascale: ", self.alphaScale)
-        print("offset: ", self.offset)\
+        print("offset: ", self.offset)
         print("kta:", self.kta)
         print("ktaScale:", self.ktaScale)
         print("kv:", self.kv)
@@ -636,10 +633,10 @@ class MLX90640:
         
         with self.i2c_device as i2c:
             i2c.write(cmd)
-        print("Wrote:", [hex(i) for i in cmd])
+        #print("Wrote:", [hex(i) for i in cmd])
         time.sleep(0.001)
         self._I2CReadWords(writeAddress, dataCheck)
-        print("dataCheck: 0x%x" % dataCheck[0])
+        #print("dataCheck: 0x%x" % dataCheck[0])
         """
         if (dataCheck != data):
             return -2
@@ -664,11 +661,11 @@ class MLX90640:
                 i2c.write_then_readinto(addrbuf, inbuf, in_end=read_words*2) # in bytes
                 #print("-> ", [hex(i) for i in addrbuf])
                 outwords = struct.unpack('>' + 'H' * read_words, inbuf[0:read_words*2])
-                #print("<- (", read_words, ")", [hex(i) for i in outwords[0:10]])
+                #print("<- (", read_words, ")", [hex(i) for i in outwords])
                 for i, w in enumerate(outwords):
                     buffer[offset+i] = w
                 offset += read_words
                 remainingWords -= read_words
                 addr += read_words
-        print("i2c read ", read_words, time.monotonic()-stamp)
+        #print("i2c read", read_words, "words in", time.monotonic()-stamp)
         #print("Read: ", [hex(i) for i in buffer[0:10]])

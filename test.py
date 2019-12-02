@@ -3,6 +3,9 @@ import board
 import busio
 import mlx90640
 
+PRINT_TEMPERATURES = False
+PRINT_ASCIIART = True
+
 i2c = busio.I2C(board.SCL, board.SDA,  frequency=800000)
 while not i2c.try_lock():
     pass
@@ -15,9 +18,24 @@ print([hex(i) for i in mlx.serial_number])
 
 frame = [0] * 768
 while True:
-    try:
-        mlx.getFrame(frame)
-    except RuntimeError as e:
-        print(e)
-        print("#" * 40)
-        print("retrying...")
+    mlx.getFrame(frame)
+    for h in range(24):
+        for w in range(32):
+            t = frame[h*32 + w]
+            if PRINT_TEMPERATURES:
+                print("%0.1f, " % t, end="")
+            if PRINT_ASCIIART:
+                c = '&'
+                if t < 20: c = ' '
+                elif t < 23: c = '.'
+                elif t < 25: c = '-'
+                elif t < 27: c = '*'
+                elif t < 29: c = '+'
+                elif t < 31: c = 'x'
+                elif t < 33: c = '%'
+                elif t < 35: c = '#'
+                elif t < 37: c = 'X'
+                print(c, end="")
+        print()
+    print()
+        
