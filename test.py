@@ -6,7 +6,7 @@ import mlx90640
 PRINT_TEMPERATURES = False
 PRINT_ASCIIART = True
 
-i2c = busio.I2C(board.SCL, board.SDA,  frequency=800000)
+i2c = busio.I2C(board.SCL, board.SDA, frequency=800000)
 while not i2c.try_lock():
     pass
 print("I2C addresses found:", [hex(device_address)
@@ -16,9 +16,19 @@ mlx = mlx90640.MLX90640(i2c)
 print("MLX addr detected on I2C")
 print([hex(i) for i in mlx.serial_number])
 
+mlx.refresh_rate = mlx90640.RefreshRate.REFRESH_32_HZ
+print(mlx.refresh_rate)
+print("refresh rate: ", pow(2, (mlx.refresh_rate-1)), "Hz")
+
 frame = [0] * 768
 while True:
-    mlx.getFrame(frame)
+    stamp = time.monotonic()
+    try:
+        mlx.getFrame(frame)
+    except ValueError:
+        # these happen, no biggie - retry
+        continue
+    print("Read 2 frames in %0.2f s" % (time.monotonic()-stamp))
     for h in range(24):
         for w in range(32):
             t = frame[h*32 + w]

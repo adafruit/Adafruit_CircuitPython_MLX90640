@@ -4,10 +4,20 @@ import math
 import time
 
 eeData = [0] * 832
-I2C_READ_LEN = 1024
+I2C_READ_LEN = 2048
 SCALEALPHA = 0.000001
 MLX90640_DEVICEID1 = 0x2407
 OPENAIR_TA_SHIFT = 8
+
+class RefreshRate: # pylint: disable=too-few-public-methods
+    REFRESH_0_5_HZ = 0b000  # 0.5Hz
+    REFRESH_1_HZ = 0b001  # 1Hz
+    REFRESH_2_HZ = 0b010  # 2Hz
+    REFRESH_4_HZ = 0b011  # 4Hz
+    REFRESH_8_HZ = 0b100  # 8Hz
+    REFRESH_16_HZ = 0b101  # 16Hz
+    REFRESH_32_HZ = 0b110  # 32Hz
+    REFRESH_64_HZ = 0b111  # 64Hz
 
 class MLX90640:
     """Interface to the MLX90640 temperature sensor."""
@@ -48,6 +58,20 @@ class MLX90640:
         serialWords = [0, 0, 0]
         self._I2CReadWords(MLX90640_DEVICEID1, serialWords)
         return serialWords
+
+    @property
+    def refresh_rate(self):
+        controlRegister = [0]
+        self._I2CReadWords(0x800D, controlRegister)
+        return (controlRegister[0] >> 7) & 0x07
+
+    @refresh_rate.setter
+    def refresh_rate(self, rate):
+        controlRegister = [0]
+        value = (rate & 0x7) << 7
+        self._I2CReadWords(0x800D, controlRegister)
+        value |= controlRegister[0] & 0xFC7F
+        self._I2CWriteWord(0x800d, value)
 
     def getFrame(self, framebuf):
         emissivity = 0.95
