@@ -66,7 +66,7 @@ def gradient(x, width, cmap, spread=1):
     return r, g, b
 
 for i in range(COLORDEPTH):
-    colormap[i] = gradient(i, COLORDEPTH, map=heatmap)
+    colormap[i] = gradient(i, COLORDEPTH, heatmap)
 
 pygame.mouse.set_visible(False)
 screen.fill((255, 0, 0))
