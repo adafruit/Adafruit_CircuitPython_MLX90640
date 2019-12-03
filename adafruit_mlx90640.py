@@ -135,7 +135,7 @@ class MLX90640: # pylint: disable=too-many-instance-attributes
         tr = 23.15
         mlx90640Frame = [0] * 834
 
-        for page in range(2):
+        for _ in range(2):
             status = self._GetFrameData(mlx90640Frame)
             if status < 0:
                 raise RuntimeError("Frame data error")
@@ -564,7 +564,7 @@ class MLX90640: # pylint: disable=too-many-instance-attributes
                 self.offset[p] += (offsetRef + (occRow[i] << occRowScale) +
                                    (occColumn[j] << occColumnScale))
 
-    def _ExtractKtaPixelParameters(self):
+    def _ExtractKtaPixelParameters(self): # pylint: disable=too-many-locals
         # extract KtaPixel
         KtaRC = [0] * 4
         ktaTemp = [0] * 768
