@@ -44,4 +44,3 @@ while True:
                 print(c, end="")
         print()
     print()
-

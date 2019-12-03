@@ -57,9 +57,9 @@ def gaussian(x, a, b, c, d=0):
 
 def gradient(x, width, cmap, spread=1):
     width = float(width)
-    r = sum([gaussian(x, p[1][0], p[0] * width, width/(spread*len(cmap))) for p in map])
-    g = sum([gaussian(x, p[1][1], p[0] * width, width/(spread*len(cmap))) for p in map])
-    b = sum([gaussian(x, p[1][2], p[0] * width, width/(spread*len(cmap))) for p in map])
+    r = sum([gaussian(x, p[1][0], p[0] * width, width/(spread*len(cmap))) for p in cmap])
+    g = sum([gaussian(x, p[1][1], p[0] * width, width/(spread*len(cmap))) for p in cmap])
+    b = sum([gaussian(x, p[1][2], p[0] * width, width/(spread*len(cmap))) for p in cmap])
     r = int(constrain(r*255, 0, 255))
     g = int(constrain(g*255, 0, 255))
     b = int(constrain(b*255, 0, 255))
@@ -90,7 +90,7 @@ while True:
         mlx.getFrame(frame)
     except ValueError:
         continue        # these happen, no biggie - retry
-    
+
     print("Read 2 frames in %0.2f s" % (time.monotonic()-stamp))
 
     pixels = [0] * 768
