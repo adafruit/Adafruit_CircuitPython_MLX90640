@@ -9,7 +9,6 @@ import os
 import math
 import numpy as np
 import pygame
-from colour import Color
 from PIL import Image
 
 import mlx90640
@@ -32,23 +31,20 @@ screen = pygame.display.set_mode((0,0), pygame.FULLSCREEN)
 print(pygame.display.Info())
 
 #the list of colors we can choose from
-falsecolors = (Color("black"), Color("indigo"), Color("green"),  Color("yellow"),
-               Color("red"), Color("purple"), Color("white"))
-#how many color values we can have
-COLORDEPTH = (len(falsecolors)-1) * 50
-colors = []
-for i in range(len(falsecolors)-1):
-    colors += list(falsecolors[i].range_to(falsecolors[i+1], 50))
-print(COLORDEPTH, len(colors))
-#create the array of colors
-colors = [(int(c.red * 255), int(c.green * 255), int(c.blue * 255)) for c in colors]
+heatmap = (
+    (0.0, (0, 0, 0)),
+    (0.20, (0, 0, .5)),
+    (0.40, (0, .5, 0)),
+    (0.60, (.5, 0, 0)),
+    (0.80, (.75, .75, 0)),
+    (0.90, (1.0, .75, 0)),
+    (1.00, (1.0, 1.0, 1.0)),
+)
 
-pygame.mouse.set_visible(False)
-screen.fill((255, 0, 0))
-pygame.display.update()
-screen.fill((0, 0, 0))
-pygame.display.update()
-sensorout = pygame.Surface((32, 24))
+#how many color values we can have
+COLORDEPTH = 1000
+
+colormap = [0] * COLORDEPTH
 
 #some utility functions
 def constrain(val, min_val, max_val):
@@ -56,6 +52,29 @@ def constrain(val, min_val, max_val):
 
 def map_value(x, in_min, in_max, out_min, out_max):
     return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min
+
+def gaussian(x, a, b, c, d=0):
+    return a * math.exp(-(x - b)**2 / (2 * c**2)) + d
+
+def gradient(x, width=100, map=[], spread=1):
+    width = float(width)
+    r = sum([gaussian(x, p[1][0], p[0] * width, width/(spread*len(map))) for p in map])
+    g = sum([gaussian(x, p[1][1], p[0] * width, width/(spread*len(map))) for p in map])
+    b = sum([gaussian(x, p[1][2], p[0] * width, width/(spread*len(map))) for p in map])
+    r = int(constrain(r*255, 0, 255))
+    g = int(constrain(g*255, 0, 255))
+    b = int(constrain(b*255, 0, 255))
+    return r, g, b
+
+for i in range(COLORDEPTH):
+    colormap[i] = gradient(i, COLORDEPTH, map=heatmap)
+
+pygame.mouse.set_visible(False)
+screen.fill((255, 0, 0))
+pygame.display.update()
+screen.fill((0, 0, 0))
+pygame.display.update()
+sensorout = pygame.Surface((32, 24))
 
 
 #initialize the sensor
@@ -79,7 +98,7 @@ while True:
     for i, pixel in enumerate(frame):
         coloridx = map_value(pixel, MINTEMP, MAXTEMP, 0, COLORDEPTH - 1)
         coloridx = int(constrain(coloridx, 0, COLORDEPTH-1))
-        pixels[i] = colors[coloridx]
+        pixels[i] = colormap[coloridx]
 
     for h in range(24):
         for w in range(32):
