@@ -11,11 +11,11 @@ import numpy as np
 import pygame
 from PIL import Image
 
-import mlx90640
+import adafruit_mlx90640
 
 INTERPOLATE = 10
 
-# Set i2c freq to 1MHz in /boot/config.txt
+# MUST et I2C freq to 1MHz in /boot/config.txt
 i2c = busio.I2C(board.SCL, board.SDA)
 
 #low range of the sensor (this will be black on the screen)
@@ -78,11 +78,11 @@ sensorout = pygame.Surface((32, 24))
 
 
 #initialize the sensor
-mlx = mlx90640.MLX90640(i2c)
+mlx = adafruit_mlx90640.MLX90640(i2c)
 print("MLX addr detected on I2C, Serial #", [hex(i) for i in mlx.serial_number])
-mlx.refresh_rate = mlx90640.RefreshRate.REFRESH_32_HZ
+mlx.refresh_rate = adafruit_mlx90640.RefreshRate.REFRESH_32_HZ
 print(mlx.refresh_rate)
-print("refresh rate: ", pow(2, (mlx.refresh_rate-1)), "Hz")
+print("Refresh rate: ", pow(2, (mlx.refresh_rate-1)), "Hz")
 
 frame = [0] * 768
 while True:
