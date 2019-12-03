@@ -2,12 +2,11 @@
    It will not work on microcontrollers running CircuitPython!"""
 
 
+import os
+import math
 import time
 import board
 import busio
-import os
-import math
-import numpy as np
 import pygame
 from PIL import Image
 
@@ -56,11 +55,11 @@ def map_value(x, in_min, in_max, out_min, out_max):
 def gaussian(x, a, b, c, d=0):
     return a * math.exp(-(x - b)**2 / (2 * c**2)) + d
 
-def gradient(x, width=100, map=[], spread=1):
+def gradient(x, width, cmap, spread=1):
     width = float(width)
-    r = sum([gaussian(x, p[1][0], p[0] * width, width/(spread*len(map))) for p in map])
-    g = sum([gaussian(x, p[1][1], p[0] * width, width/(spread*len(map))) for p in map])
-    b = sum([gaussian(x, p[1][2], p[0] * width, width/(spread*len(map))) for p in map])
+    r = sum([gaussian(x, p[1][0], p[0] * width, width/(spread*len(cmap))) for p in map])
+    g = sum([gaussian(x, p[1][1], p[0] * width, width/(spread*len(cmap))) for p in map])
+    b = sum([gaussian(x, p[1][2], p[0] * width, width/(spread*len(cmap))) for p in map])
     r = int(constrain(r*255, 0, 255))
     g = int(constrain(g*255, 0, 255))
     b = int(constrain(b*255, 0, 255))
@@ -108,11 +107,9 @@ while True:
     #pixelrgb = [colors[constrain(int(pixel), 0, COLORDEPTH-1)] for pixel in pixels]
     img = Image.new('RGB', (32, 24))
     img.putdata(pixels)
-    img = img.resize((32*INTERPOLATE, 24*INTERPOLATE), Image.BICUBIC) 
+    img = img.resize((32*INTERPOLATE, 24*INTERPOLATE), Image.BICUBIC)
     img_surface = pygame.image.fromstring(img.tobytes(), img.size, img.mode)
     pygame.transform.scale(img_surface.convert(), screen.get_size(), screen)
     pygame.display.update()
     print("Completed 2 frames in %0.2f s (%d FPS)" %
           (time.monotonic()-stamp, 1.0 / (time.monotonic()-stamp)))
-
-
