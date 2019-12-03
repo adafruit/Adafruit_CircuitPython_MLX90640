@@ -20,7 +20,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 """
-`adafruit_mlx90640`
+`Adafruit_MLX90640`
 ================================================================================
 
 Driver for the MLX90640 thermal camera

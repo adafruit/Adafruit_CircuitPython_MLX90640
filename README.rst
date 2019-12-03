@@ -30,12 +30,6 @@ This is easily achieved by downloading
 
 Installing from PyPI
 =====================
-.. note:: This library is not available on PyPI yet. Install documentation is included
-   as a standard element. Stay tuned for PyPI availability!
-
-.. todo:: Remove the above note if PyPI version is/will be available at time of release.
-   If the library is not planned for PyPI, remove the entire 'Installing from PyPI' section.
-
 On supported GNU/Linux systems like the Raspberry Pi, you can install the driver locally `from
 PyPI <https://pypi.org/project/adafruit-circuitpython-mlx90640/>`_. To install for current user:
 
@@ -61,7 +55,34 @@ To install in a virtual environment in your current project:
 Usage Example
 =============
 
-.. todo:: Add a quick, simple example. It and other examples should live in the examples folder and be included in docs/examples.rst.
+.. code-block:: python
+
+	import time
+	import board
+	import busio
+	import adafruit_mlx90640
+
+	i2c = busio.I2C(board.SCL, board.SDA, frequency=800000)
+
+	mlx = adafruit_mlx90640.MLX90640(i2c)
+	print("MLX addr detected on I2C", [hex(i) for i in mlx.serial_number])
+
+	mlx.refresh_rate = adafruit_mlx90640.RefreshRate.REFRESH_2_HZ
+
+	frame = [0] * 768
+	while True:
+	    try:
+		mlx.getFrame(frame)
+	    except ValueError:
+		# these happen, no biggie - retry
+		continue
+	    print("Read 2 frames in %0.2f s" % (time.monotonic()-stamp))
+	    for h in range(24):
+		for w in range(32):
+		    t = frame[h*32 + w]
+		    print("%0.1f, " % t, end="")
+                print()
+            print()
 
 Contributing
 ============
