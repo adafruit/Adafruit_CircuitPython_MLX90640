@@ -128,18 +128,18 @@ class MLX90640:
                 raise RuntimeError("Frame data error")
             tr = self._GetTa(mlx90640Frame) - OPENAIR_TA_SHIFT # For a MLX90640 in the open air the shift is -8 degC.
             self._CalculateTo(mlx90640Frame, emissivity, tr, framebuf)
-        
+
     def _GetFrameData(self, frameData):
         dataReady = 0
         cnt = 0
         statusRegister = [0]
         controlRegister = [0]
-        
+
         while dataReady == 0:
             self._I2CReadWords(0x8000, statusRegister)
             dataReady = statusRegister[0] & 0x0008
             #print("ready status: 0x%x" % dataReady)
-        
+
         while (dataReady != 0) and (cnt < 5):
             self._I2CWriteWord(0x8000, 0x0030)
             #print("Read frame", cnt)
@@ -171,7 +171,7 @@ class MLX90640:
         ptatArt = (ptat / (ptat * self.alphaPTAT + ptatArt)) * math.pow(2, 18)
 
         ta = (ptatArt / (1 + self.KvPTAT * (vdd - 3.3)) - self.vPTAT25)
-        ta = ta / self.KtPTAT + 25    
+        ta = ta / self.KtPTAT + 25
         return ta
 
     def _GetVdd(self, frameData):
@@ -182,7 +182,7 @@ class MLX90640:
         resolutionRAM = (frameData[832] & 0x0C00) >> 10
         resolutionCorrection = math.pow(2, self.resolutionEE) / math.pow(2, resolutionRAM)
         vdd = (resolutionCorrection * vdd - self.vdd25) / self.kVdd + 3.3
-    
+
         return vdd
 
 
@@ -193,7 +193,7 @@ class MLX90640:
 
         vdd = self._GetVdd(frameData)
         ta = self._GetTa(frameData)
-    
+
         ta4 = (ta + 273.15)
         ta4 = ta4 * ta4
         ta4 = ta4 * ta4
@@ -201,32 +201,32 @@ class MLX90640:
         tr4 = tr4 * tr4
         tr4 = tr4 * tr4
         taTr = tr4 - (tr4-ta4)/emissivity
-    
+
         ktaScale = math.pow(2, self.ktaScale)
         kvScale = math.pow(2, self.kvScale)
         alphaScale = math.pow(2, self.alphaScale)
-    
+
         alphaCorrR[0] = 1 / (1 +self.ksTo[0] * 40)
         alphaCorrR[1] = 1
         alphaCorrR[2] = (1 + self.ksTo[1] * self.ct[2]);
         alphaCorrR[3] = alphaCorrR[2] * (1 + self.ksTo[2] * (self.ct[3] - self.ct[2]));
-    
-        #------------------------- Gain calculation -----------------------------------    
+
+        #------------------------- Gain calculation -----------------------------------
         gain = frameData[778]
         if gain > 32767:
             gain -= 65536
         gain = self.gainEE / gain
-  
-        #------------------------- To calculation -------------------------------------    
+
+        #------------------------- To calculation -------------------------------------
         mode = (frameData[832] & 0x1000) >> 5
-    
+
         irDataCP[0] = frameData[776]
         irDataCP[1] = frameData[808]
         for i in range(2):
             if irDataCP[i] > 32767:
                 irDataCP[i] -= 65536
             irDataCP[i] *= gain
-    
+
         irDataCP[0] = irDataCP[0] - self.cpOffset[0] * (1 + self.cpKta * (ta - 25)) * (1 + self.cpKv * (vdd - 3.3))
         if  mode == self.calibrationModeEE: #MEME check float/uint
             irDataCP[1] = irDataCP[1] - self.cpOffset[1] * (1 + self.cpKta * (ta - 25)) * (1 + self.cpKv * (vdd - 3.3))
@@ -234,10 +234,10 @@ class MLX90640:
             irDataCP[1] = irDataCP[1] - (self.cpOffset[1] + self.ilChessC[0]) * (1 + self.cpKta * (ta - 25)) * (1 + self.cpKv * (vdd - 3.3))
 
         for pixelNumber in range(768):
-            ilPattern = pixelNumber // 32 - (pixelNumber // 64) * 2; 
-            chessPattern = ilPattern ^ (pixelNumber - (pixelNumber//2)*2); 
+            ilPattern = pixelNumber // 32 - (pixelNumber // 64) * 2;
+            chessPattern = ilPattern ^ (pixelNumber - (pixelNumber//2)*2);
             conversionPattern = ((pixelNumber + 2) // 4 - (pixelNumber + 3) // 4 + (pixelNumber + 1) // 4 - pixelNumber // 4) * (1 - 2 * ilPattern)
-        
+
             if mode == 0:
                 pattern = ilPattern
             else:
@@ -248,14 +248,14 @@ class MLX90640:
                 if irData > 32767:
                     irData -= 65536
                 irData *= gain;
-            
+
                 kta = self.kta[pixelNumber]/ktaScale
                 kv = self.kv[pixelNumber]/kvScale
                 irData -= self.offset[pixelNumber]*(1 + kta*(ta - 25))*(1 + kv*(vdd - 3.3))
-            
+
                 if mode != self.calibrationModeEE:
-                   irData += self.ilChessC[2] * (2 * ilPattern - 1) - self.ilChessC[1] * conversionPattern; 
-    
+                   irData += self.ilChessC[2] * (2 * ilPattern - 1) - self.ilChessC[1] * conversionPattern;
+
                 irData = irData - self.tgc * irDataCP[subPage];
                 irData /= emissivity
 
@@ -372,7 +372,7 @@ class MLX90640:
         self.ct[3] = (eeData[63] & 0x0F00) >> 8
         self.ct[2] *= step
         self.ct[3] = self.ct[2] + self.ct[3]*step
-    
+
         KsToScale = (eeData[63] & 0x000F) + 8
         KsToScale = 1 << KsToScale
 
@@ -380,7 +380,7 @@ class MLX90640:
         self.ksTo[1] = (eeData[61] & 0xFF00) >> 8
         self.ksTo[2] = eeData[62] & 0x00FF
         self.ksTo[3] = (eeData[62] & 0xFF00) >> 8
-    
+
         for i in range(4):
             if self.ksTo[i] > 127:
                 self.ksTo[i] -= 256
@@ -391,40 +391,40 @@ class MLX90640:
         # extract CP
         offsetSP = [0] * 2
         alphaSP = [0] * 2
-        
+
         alphaScale = ((eeData[32] & 0xF000) >> 12) + 27
-    
+
         offsetSP[0] = eeData[58] & 0x03FF
         if offsetSP[0] > 511:
-            offsetSP[0] -= 1024    
+            offsetSP[0] -= 1024
 
         offsetSP[1] = (eeData[58] & 0xFC00) >> 10
         if offsetSP[1] > 31:
             offsetSP[1] -= 64
         offsetSP[1] += offsetSP[0]
-    
+
         alphaSP[0] = eeData[57] & 0x03FF
         if alphaSP[0] > 511:
             alphaSP[0] -= 1024
         alphaSP[0] /= math.pow(2, alphaScale)
-    
+
         alphaSP[1] = (eeData[57] & 0xFC00) >> 10
         if alphaSP[1] > 31:
             alphaSP[1] -= 64
         alphaSP[1] = (1 + alphaSP[1]/128) * alphaSP[0]
-    
+
         cpKta = eeData[59] & 0x00FF
         if cpKta > 127:
             cpKta -= 256
         ktaScale1 = ((eeData[56] & 0x00F0) >> 4) + 8
         self.cpKta = cpKta / math.pow(2, ktaScale1)
-    
+
         cpKv = (eeData[59] & 0xFF00) >> 8
         if cpKv > 127:
             cpKv -= 256
         kvScale = (eeData[56] & 0x0F00) >> 8
         self.cpKv = cpKv / math.pow(2, kvScale)
-       
+
         self.cpAlpha[0] = alphaSP[0]
         self.cpAlpha[1] = alphaSP[1]
         self.cpOffset[0] = offsetSP[0]
@@ -478,7 +478,7 @@ class MLX90640:
 
         temp = max(alphaTemp)
         #print("temp", temp)
-        
+
         alphaScale = 0
         while temp < 32768:
             temp *= 2
@@ -537,27 +537,27 @@ class MLX90640:
         # extract KtaPixel
         KtaRC = [0] * 4
         ktaTemp = [0] * 768
-    
+
         KtaRoCo = (eeData[54] & 0xFF00) >> 8
         if KtaRoCo > 127:
             KtaRoCo -= 256
         KtaRC[0] = KtaRoCo
-    
+
         KtaReCo = eeData[54] & 0x00FF
         if KtaReCo > 127:
             KtaReCo -= 256
         KtaRC[2] = KtaReCo
-      
+
         KtaRoCe = (eeData[55] & 0xFF00) >> 8
         if KtaRoCe > 127:
             KtaRoCe -= 256
         KtaRC[1] = KtaRoCe
-      
+
         KtaReCe = eeData[55] & 0x00FF
         if KtaReCe > 127:
             KtaReCe -= 256
         KtaRC[3] = KtaReCe
-  
+
         ktaScale1 = ((eeData[56] & 0x00F0) >> 4) + 8
         ktaScale2 = (eeData[56] & 0x000F)
 
@@ -576,12 +576,12 @@ class MLX90640:
         temp = abs(ktaTemp[0])
         for kta in ktaTemp:
             temp = max(temp, abs(kta))
-                
+
         ktaScale1 = 0
         while temp < 64:
             temp *= 2
             ktaScale1 += 1
-     
+
         for i in range(768):
             temp = ktaTemp[i] * math.pow(2, ktaScale1)
             if temp < 0:
@@ -604,19 +604,19 @@ class MLX90640:
         if KvReCo > 7:
             KvReCo -= 16
         KvT[2] = KvReCo
-      
+
         KvRoCe = (eeData[52] & 0x00F0) >> 4
         if KvRoCe > 7:
             KvRoCe -= 16
         KvT[1] = KvRoCe
-      
+
         KvReCe = eeData[52] & 0x000F
         if KvReCe > 7:
             KvReCe -= 16
         KvT[3] = KvReCe
-  
+
         kvScale = (eeData[56] & 0x0F00) >> 8
-        
+
         for i in range(24):
             for j in range(32):
                 p = 32 * i + j
@@ -644,7 +644,7 @@ class MLX90640:
 
     def _ExtractCILCParameters(self):
         ilChessC = [0] * 3
-    
+
         self.calibrationModeEE = (eeData[10] & 0x0800) >> 4
         self.calibrationModeEE = self.calibrationModeEE ^ 0x80
 
@@ -652,17 +652,17 @@ class MLX90640:
         if ilChessC[0] > 31:
             ilChessC[0] -= 64
         ilChessC[0] /= 16.0
-    
+
         ilChessC[1] = (eeData[53] & 0x07C0) >> 6
         if ilChessC[1] > 15:
             ilChessC[1] -= 32
         ilChessC[1] /= 2.0
-    
+
         ilChessC[2] = (eeData[53] & 0xF800) >> 11
         if ilChessC[2] > 15:
             ilChessC[2] -= 32
         ilChessC[2] /= 8.0
-    
+
         self.ilChessC = ilChessC
 
     def _ExtractDeviatingPixels(self):
@@ -672,7 +672,7 @@ class MLX90640:
         pixCnt = 0
         brokenPixCnt = 0
         outlierPixCnt = 0
-         
+
         while (pixCnt < 768) and (brokenPixCnt < 5) and (outlierPixCnt < 5):
             if eeData[pixCnt+64] == 0:
                 self.brokenPixels[brokenPixCnt] = pixCnt
@@ -681,7 +681,7 @@ class MLX90640:
                 self.outlierPixels[outlierPixCnt] = pixCnt
                 outlierPixCnt += 1
             pixCnt += 1
-    
+
         if brokenPixCnt > 4:
             raise RuntimeError("More than 4 broken pixels")
         if outlierPixCnt > 4:
@@ -698,7 +698,7 @@ class MLX90640:
         cmd[2] = data >> 8
         cmd[3] = data & 0x00FF
         dataCheck = [0]
-        
+
         with self.i2c_device as i2c:
             i2c.write(cmd)
         #print("Wrote:", [hex(i) for i in cmd])
