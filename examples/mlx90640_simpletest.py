@@ -30,6 +30,7 @@ while True:
                 print("%0.1f, " % t, end="")
             if PRINT_ASCIIART:
                 c = '&'
+                # pylint: disable=multiple-statements
                 if t < 20: c = ' '
                 elif t < 23: c = '.'
                 elif t < 25: c = '-'
@@ -39,7 +40,8 @@ while True:
                 elif t < 33: c = '%'
                 elif t < 35: c = '#'
                 elif t < 37: c = 'X'
+                # pylint: enable=multiple-statements
                 print(c, end="")
         print()
     print()
-        
+
