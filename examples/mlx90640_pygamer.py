@@ -73,20 +73,14 @@ board.DISPLAY.show(group)
 mini = 0
 maxi = 0
 
-a1 = 20
-a2 = 37
+my_a1 = 20
+my_a2 = 37
 
-def temp2index(s):
+def temp2index(s, a1, a2):
     global mini, maxi
-    global a1, a2
 
-    b1 = 1
+    b1 = 0
     b2 = number_of_colors - 1
-
-    if s > maxi:
-        maxi = s
-    if s < mini:
-        mini = s
 
     if s < a1:
         r = b1
@@ -106,6 +100,7 @@ print([hex(i) for i in mlx.serial_number])
 mlx.refresh_rate = adafruit_mlx90640.RefreshRate.REFRESH_4_HZ
 
 frame = [0] * 768
+
 while True:
     stamp = time.monotonic()
     try:
@@ -121,13 +116,17 @@ while True:
     for h in range(24):
         for w in range(32):
             t = frame[h*32 + w]
-            image_bitmap[w, (23-h)] = temp2index(t)  # Convert temperature to palette index
+            if t > maxi:
+                maxi = t
+            if t < mini:
+                mini = t
+            image_bitmap[w, (23-h)] = temp2index(t, my_a1, my_a2)
 
-    min_label.text="%0.2f" % (mini)
+    min_label.text="%0.2f" % (my_a1)
 
-    max_string="%0.2f" % (maxi)
+    max_string="%0.2f" % (my_a2)
     max_label.x=120-(5*len(max_string))      # Tricky calculation to left align
     max_label.text=max_string
 
-    a1 = mini                  # Automatically change the color scale
-    a2 = maxi
+    my_a1 = mini                  # Automatically change the color scale
+    my_a2 = maxi
