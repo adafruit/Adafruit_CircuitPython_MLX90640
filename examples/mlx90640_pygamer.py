@@ -10,7 +10,8 @@ number_of_colors = 64
 palette = displayio.Palette(number_of_colors)  # Palette with all our colors
 
 ## Heatmap code inspired from: http://www.andrewnoske.com/wiki/Code_-_heatmaps_and_color_gradients
-color_A = [[0, 0, 0], [0, 0, 255], [0, 255, 255], [0, 255, 0], [255, 255, 0], [255, 0, 0], [255, 255, 255]]
+color_A = [[0, 0, 0], [0, 0, 255], [0, 255, 255], [0, 255, 0], [255, 255, 0], \
+    [255, 0, 0], [255, 255, 255]]
 color_B = [[0, 0, 255], [0, 255, 255] , [0, 255, 0], [255, 255, 0], [255, 0, 0]]
 color_C = [[0, 0, 0], [255, 255, 255]]
 color_D = [[0, 0, 255], [255, 0, 0]]
@@ -46,7 +47,7 @@ image_group.append(image_tile)
 
 scale_bitmap = displayio.Bitmap( number_of_colors, 1, number_of_colors )
 # Create a Group Scale must be 128 divided by number_of_colors
-scale_group = displayio.Group(scale=2) 
+scale_group = displayio.Group(scale=2)
 scale_tile = displayio.TileGrid(scale_bitmap, pixel_shader=palette, x = 0, y = 60)
 scale_group.append(scale_tile)
 
@@ -57,7 +58,8 @@ for i in range(number_of_colors):
 group = displayio.Group()
 
 min_label = Label(terminalio.FONT, max_glyphs=10, color=palette[0], x = 0, y = 110)
-max_label = Label(terminalio.FONT, max_glyphs=10, color=palette[number_of_colors-1], x = 80, y = 110)
+max_label = Label(terminalio.FONT, max_glyphs=10, color=palette[number_of_colors-1], \
+    x = 80, y = 110)
 
 # Add all the sub-group to the SuperGroup
 group.append(image_group)
@@ -129,4 +131,3 @@ while True:
 
     a1 = mini                  # Automatically change the color scale
     a2 = maxi
-
