@@ -10,39 +10,43 @@ number_of_colors = 64
 palette = displayio.Palette(number_of_colors)  # Palette with all our colors
 
 ## Heatmap code inspired from: http://www.andrewnoske.com/wiki/Code_-_heatmaps_and_color_gradients
-color_A = [ [0, 0, 0] , [0, 0, 255] ,[0, 255, 255] , [0, 255, 0] ,[255, 255, 0] , [255, 0, 0] , [255, 255, 255] ]
-color_B = [ [0, 0, 255] ,[0, 255, 255] , [0, 255, 0] ,[255, 255, 0] , [255, 0, 0] ]
-color_C = [ [0, 0, 0] , [255, 255, 255] ]
-color_D = [ [0, 0, 255] , [255, 0, 0] ]
+color_A = [[0, 0, 0], [0, 0, 255], [0, 255, 255], [0, 255, 0], [255, 255, 0], [255, 0, 0], [255, 255, 255]]
+color_B = [[0, 0, 255], [0, 255, 255] , [0, 255, 0], [255, 255, 0], [255, 0, 0]]
+color_C = [[0, 0, 0], [255, 255, 255]]
+color_D = [[0, 0, 255], [255, 0, 0]]
 
 color = color_B
 NUM_COLORS = len (color)
 
 def MakeHeatMapColor():
-    for i in range(number_of_colors):
-        value = i * (NUM_COLORS-1) / (number_of_colors - 1);
-        idx1  = int(value);             # Our desired color will be after this index.
+    for c in range(number_of_colors):
+        value = c * (NUM_COLORS-1) / (number_of_colors - 1)
+        idx1  = int(value)              # Our desired color will be after this index.
         if idx1 == value :              # This is the corner case
             red   = color[idx1][0]
             green = color[idx1][1]
             blue  = color[idx1][2]
         else:
-            idx2  = idx1+1;                 # ... and before this index (inclusive).
-            fractBetween = value - idx1;    # Distance between the two indexes (0-1).
-            red   = int( round( (color[idx2][0] - color[idx1][0]) * fractBetween + color[idx1][0] ) )
-            green = int( round( (color[idx2][1] - color[idx1][1]) * fractBetween + color[idx1][1] ) )
-            blue  = int( round( (color[idx2][2] - color[idx1][2]) * fractBetween + color[idx1][2] ) )
-        palette[i]= ( 0x010000 * red ) + ( 0x000100 * green ) + ( 0x000001 * blue )
+            idx2  = idx1+1                  # ... and before this index (inclusive).
+            fractBetween = value - idx1     # Distance between the two indexes (0-1).
+            red   = int(round((color[idx2][0] - color[idx1][0]) * fractBetween + color[idx1][0]))
+            green = int(round((color[idx2][1] - color[idx1][1]) * fractBetween + color[idx1][1]))
+            blue  = int(round((color[idx2][2] - color[idx1][2]) * fractBetween + color[idx1][2]))
+        palette[c]= ( 0x010000 * red ) + ( 0x000100 * green ) + ( 0x000001 * blue )
 
 MakeHeatMapColor()
 
-image_bitmap = displayio.Bitmap( 32, 24, number_of_colors )              # Bitmap for colour coded thermal value
-image_tile= displayio.TileGrid(image_bitmap, pixel_shader=palette)       # Create a TileGrid using the Bitmap and Palette
-image_group = displayio.Group(scale=4)                                   # Create a Group that scale 32*24 to 128*96
+# Bitmap for colour coded thermal value
+image_bitmap = displayio.Bitmap( 32, 24, number_of_colors )
+# Create a TileGrid using the Bitmap and Palette
+image_tile= displayio.TileGrid(image_bitmap, pixel_shader=palette)
+# Create a Group that scale 32*24 to 128*96
+image_group = displayio.Group(scale=4)
 image_group.append(image_tile)
 
-scale_bitmap = displayio.Bitmap( number_of_colors, 1, number_of_colors ) #
-scale_group = displayio.Group(scale=2) # Create a Group Scale must be 128 divided by number_of_colors
+scale_bitmap = displayio.Bitmap( number_of_colors, 1, number_of_colors )
+# Create a Group Scale must be 128 divided by number_of_colors
+scale_group = displayio.Group(scale=2) 
 scale_tile = displayio.TileGrid(scale_bitmap, pixel_shader=palette, x = 0, y = 60)
 scale_group.append(scale_tile)
 
@@ -83,12 +87,12 @@ def temp2index(s):
         mini = s
 
     if s < a1:
-        i = b1
+        r = b1
     elif s > a2:
-        i = b2
+        r = b2
     else:
-        i = int( round( b1 + ( (s - a1) * (b2 - b1) / (a2 - a1) ) ) )
-    return i
+        r = int( round( b1 + ( (s - a1) * (b2 - b1) / (a2 - a1) ) ) )
+    return r
 
 i2c = busio.I2C(board.SCL, board.SDA, frequency=800000)
 
@@ -125,3 +129,4 @@ while True:
 
     a1 = mini                  # Automatically change the color scale
     a2 = maxi
+
