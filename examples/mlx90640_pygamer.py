@@ -77,8 +77,6 @@ my_a1 = 20
 my_a2 = 37
 
 def temp2index(s, a1, a2):
-    global mini, maxi
-
     b1 = 0
     b2 = number_of_colors - 1
 
