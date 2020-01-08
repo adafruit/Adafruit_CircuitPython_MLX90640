@@ -11,8 +11,7 @@ number_of_colors = 64                          # Number of color in the gradian
 last_color = number_of_colors-1                # Last color in palette
 palette = displayio.Palette(number_of_colors)  # Palette with all our colors
 
-## Heatmap code inspired from: 
-## http://www.andrewnoske.com/wiki/Code_-_heatmaps_and_color_gradients
+## Heatmap code inspired from: http://www.andrewnoske.com/wiki/Code_-_heatmaps_and_color_gradients
 color_A = [[0, 0, 0], [0, 0, 255], [0, 255, 255], [0, 255, 0], [255, 255, 0], \
     [255, 0, 0], [255, 255, 255]]
 color_B = [[0, 0, 255], [0, 255, 255] , [0, 255, 0], [255, 255, 0], [255, 0, 0]]
@@ -81,11 +80,8 @@ mlx = adafruit_mlx90640.MLX90640(i2c)
 print("MLX addr detected on I2C")
 print([hex(i) for i in mlx.serial_number])
 
-# Try whatever refresh_rate give the best result for you. 4_HZ seems to be optimal
-
 #mlx.refresh_rate = adafruit_mlx90640.RefreshRate.REFRESH_2_HZ
 mlx.refresh_rate = adafruit_mlx90640.RefreshRate.REFRESH_4_HZ
-#mlx.refresh_rate = adafruit_mlx90640.RefreshRate.REFRESH_8_HZ
 
 frame = [0] * 768
 
