@@ -5,8 +5,10 @@ import adafruit_mlx90640
 import displayio
 import terminalio
 from adafruit_display_text.label import Label
+from simpleio import map_range
 
-number_of_colors = 64
+number_of_colors = 64                          # Number of color in the gradian
+last_color = number_of_colors-1                # Last color in palette
 palette = displayio.Palette(number_of_colors)  # Palette with all our colors
 
 ## Heatmap code inspired from: http://www.andrewnoske.com/wiki/Code_-_heatmaps_and_color_gradients
@@ -21,7 +23,7 @@ NUM_COLORS = len (color)
 
 def MakeHeatMapColor():
     for c in range(number_of_colors):
-        value = c * (NUM_COLORS-1) / (number_of_colors - 1)
+        value = c * (NUM_COLORS-1) / last_color
         idx1  = int(value)              # Our desired color will be after this index.
         if idx1 == value :              # This is the corner case
             red   = color[idx1][0]
@@ -58,8 +60,7 @@ for i in range(number_of_colors):
 group = displayio.Group()
 
 min_label = Label(terminalio.FONT, max_glyphs=10, color=palette[0], x = 0, y = 110)
-max_label = Label(terminalio.FONT, max_glyphs=10, color=palette[number_of_colors-1], \
-    x = 80, y = 110)
+max_label = Label(terminalio.FONT, max_glyphs=10, color=palette[last_color], x = 80, y = 110)
 
 # Add all the sub-group to the SuperGroup
 group.append(image_group)
@@ -70,23 +71,8 @@ group.append(max_label)
 # Add the SuperGroup to the Display
 board.DISPLAY.show(group)
 
-mini = 0
-maxi = 0
-
-my_a1 = 20
-my_a2 = 37
-
-def temp2index(s, a1, a2):
-    b1 = 0
-    b2 = number_of_colors - 1
-
-    if s < a1:
-        r = b1
-    elif s > a2:
-        r = b2
-    else:
-        r = int( round( b1 + ( (s - a1) * (b2 - b1) / (a2 - a1) ) ) )
-    return r
+min_t = 20       # Initial minimum temperature range, before auto scale
+max_t = 37       # Initial maximum temperature range, before auto scale
 
 i2c = busio.I2C(board.SCL, board.SDA, frequency=800000)
 
@@ -106,10 +92,11 @@ while True:
     except ValueError:
         # these happen, no biggie - retry
         continue
-    print("Read 2 frames in %0.2f s" % (time.monotonic()-stamp))
 
-    mini = frame[0]             # Define a default min and max value
-    maxi = frame[0]             # Will be updated by temp2index function
+#    print("Time for data aquisition: %0.2f s" % (time.monotonic()-stamp))
+
+    mini = frame[0]       # Define a min temperature of current image
+    maxi = frame[0]       # Define a max temperature of current image
 
     for h in range(24):
         for w in range(32):
@@ -118,13 +105,15 @@ while True:
                 maxi = t
             if t < mini:
                 mini = t
-            image_bitmap[w, (23-h)] = temp2index(t, my_a1, my_a2)
+            image_bitmap[w, (23-h)] = int(map_range(t, min_t, max_t, 0, last_color ))
 
-    min_label.text="%0.2f" % (my_a1)
+    min_label.text="%0.2f" % (min_t)
 
-    max_string="%0.2f" % (my_a2)
+    max_string="%0.2f" % (max_t)
     max_label.x=120-(5*len(max_string))      # Tricky calculation to left align
     max_label.text=max_string
 
-    my_a1 = mini                  # Automatically change the color scale
-    my_a2 = maxi
+    min_t = mini                  # Automatically change the color scale
+    max_t = maxi
+#    print((mini, maxi))           # Use this line to display min and max graph in Mu
+#    print("Total time for aquisition and display %0.2f s" % (time.monotonic()-stamp))
