@@ -766,7 +766,7 @@ class MLX90640:  # pylint: disable=too-many-instance-attributes
             raise RuntimeError("More than 4 outlier pixels")
         if (brokenPixCnt + outlierPixCnt) > 4:
             raise RuntimeError("More than 4 faulty pixels")
-        print("Found %d broken pixels, %d outliers" % (brokenPixCnt, outlierPixCnt))
+        # print("Found %d broken pixels, %d outliers" % (brokenPixCnt, outlierPixCnt))
         # TODO INCOMPLETE
 
     def _I2CWriteWord(self, writeAddress, data):
