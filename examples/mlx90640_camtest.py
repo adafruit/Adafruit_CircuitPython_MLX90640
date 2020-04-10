@@ -9,6 +9,7 @@ import board
 import busio
 from PIL import Image
 import pygame
+import argparse
 
 import adafruit_mlx90640
 
@@ -22,11 +23,26 @@ MINTEMP = 20.0
 # high range of the sensor (this will be white on the screen)
 MAXTEMP = 50.0
 
+# if in windowed mode, make the window bigger by this factor
+WINDOW_SCALING_FACTOR = 50
+
+# parse command line arguments
+parser = argparse.ArgumentParser()
+parser.add_argument("--windowed", action="store_true",
+                    help="display in a window")
+
+args = parser.parse_args()
+
 # set up display
-os.environ["SDL_FBDEV"] = "/dev/fb0"
-os.environ["SDL_VIDEODRIVER"] = "fbcon"
+if not args.windowed:
+    os.environ["SDL_FBDEV"] = "/dev/fb0"
+    os.environ["SDL_VIDEODRIVER"] = "fbcon"
 pygame.init()
-screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
+if not args.windowed:
+    screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
+else:
+    screen = pygame.display.set_mode([32*WINDOW_SCALING_FACTOR,
+                                      24*WINDOW_SCALING_FACTOR])
 print(pygame.display.Info())
 
 # the list of colors we can choose from
