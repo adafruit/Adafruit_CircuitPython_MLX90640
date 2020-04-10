@@ -30,6 +30,8 @@ WINDOW_SCALING_FACTOR = 50
 parser = argparse.ArgumentParser()
 parser.add_argument("--windowed", action="store_true",
                     help="display in a window")
+parser.add_argument("--disable-interpolation", action="store_true",
+                    help="disable interpolation in-between camera pixels")
 
 args = parser.parse_args()
 
@@ -133,7 +135,8 @@ while True:
     # pixelrgb = [colors[constrain(int(pixel), 0, COLORDEPTH-1)] for pixel in pixels]
     img = Image.new("RGB", (32, 24))
     img.putdata(pixels)
-    img = img.resize((32 * INTERPOLATE, 24 * INTERPOLATE), Image.BICUBIC)
+    if not args.disable_interpolation:
+        img = img.resize((32 * INTERPOLATE, 24 * INTERPOLATE), Image.BICUBIC)
     img_surface = pygame.image.fromstring(img.tobytes(), img.size, img.mode)
     pygame.transform.scale(img_surface.convert(), screen.get_size(), screen)
     pygame.display.update()
