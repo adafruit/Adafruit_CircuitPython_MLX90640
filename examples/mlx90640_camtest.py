@@ -28,10 +28,12 @@ WINDOW_SCALING_FACTOR = 50
 
 # parse command line arguments
 parser = argparse.ArgumentParser()
-parser.add_argument("--windowed", action="store_true",
-                    help="display in a window")
-parser.add_argument("--disable-interpolation", action="store_true",
-                    help="disable interpolation in-between camera pixels")
+parser.add_argument("--windowed", action="store_true", help="display in a window")
+parser.add_argument(
+    "--disable-interpolation",
+    action="store_true",
+    help="disable interpolation in-between camera pixels",
+)
 
 args = parser.parse_args()
 
@@ -43,8 +45,9 @@ pygame.init()
 if not args.windowed:
     screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
 else:
-    screen = pygame.display.set_mode([32*WINDOW_SCALING_FACTOR,
-                                      24*WINDOW_SCALING_FACTOR])
+    screen = pygame.display.set_mode(
+        [32 * WINDOW_SCALING_FACTOR, 24 * WINDOW_SCALING_FACTOR]
+    )
 print(pygame.display.Info())
 
 # the list of colors we can choose from
