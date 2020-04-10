@@ -143,6 +143,8 @@ while True:
     img_surface = pygame.image.fromstring(img.tobytes(), img.size, img.mode)
     pygame.transform.scale(img_surface.convert(), screen.get_size(), screen)
     pygame.display.update()
+    if args.windowed:
+        pygame.event.pump()
     print(
         "Completed 2 frames in %0.2f s (%d FPS)"
         % (time.monotonic() - stamp, 1.0 / (time.monotonic() - stamp))
