@@ -5,11 +5,11 @@
 import os
 import math
 import time
+import argparse
 import board
 import busio
 from PIL import Image
 import pygame
-import argparse
 
 import adafruit_mlx90640
 
