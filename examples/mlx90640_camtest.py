@@ -5,6 +5,7 @@
 import os
 import math
 import time
+import argparse
 import board
 import busio
 from PIL import Image
@@ -22,11 +23,31 @@ MINTEMP = 20.0
 # high range of the sensor (this will be white on the screen)
 MAXTEMP = 50.0
 
+# if in windowed mode, make the window bigger by this factor
+WINDOW_SCALING_FACTOR = 50
+
+# parse command line arguments
+parser = argparse.ArgumentParser()
+parser.add_argument("--windowed", action="store_true", help="display in a window")
+parser.add_argument(
+    "--disable-interpolation",
+    action="store_true",
+    help="disable interpolation in-between camera pixels",
+)
+
+args = parser.parse_args()
+
 # set up display
-os.environ["SDL_FBDEV"] = "/dev/fb0"
-os.environ["SDL_VIDEODRIVER"] = "fbcon"
+if not args.windowed:
+    os.environ["SDL_FBDEV"] = "/dev/fb0"
+    os.environ["SDL_VIDEODRIVER"] = "fbcon"
 pygame.init()
-screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
+if not args.windowed:
+    screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
+else:
+    screen = pygame.display.set_mode(
+        [32 * WINDOW_SCALING_FACTOR, 24 * WINDOW_SCALING_FACTOR]
+    )
 print(pygame.display.Info())
 
 # the list of colors we can choose from
@@ -117,10 +138,13 @@ while True:
     # pixelrgb = [colors[constrain(int(pixel), 0, COLORDEPTH-1)] for pixel in pixels]
     img = Image.new("RGB", (32, 24))
     img.putdata(pixels)
-    img = img.resize((32 * INTERPOLATE, 24 * INTERPOLATE), Image.BICUBIC)
+    if not args.disable_interpolation:
+        img = img.resize((32 * INTERPOLATE, 24 * INTERPOLATE), Image.BICUBIC)
     img_surface = pygame.image.fromstring(img.tobytes(), img.size, img.mode)
     pygame.transform.scale(img_surface.convert(), screen.get_size(), screen)
     pygame.display.update()
+    if args.windowed:
+        pygame.event.pump()
     print(
         "Completed 2 frames in %0.2f s (%d FPS)"
         % (time.monotonic() - stamp, 1.0 / (time.monotonic() - stamp))
