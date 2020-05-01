@@ -1,7 +1,6 @@
 """This example is for Raspberry Pi (Linux) only!
    It will not work on microcontrollers running CircuitPython!"""
 
-import sys
 import math
 import board
 import adafruit_mlx90640
