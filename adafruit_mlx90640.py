@@ -749,6 +749,7 @@ class MLX90640:  # pylint: disable=too-many-instance-attributes
         self.ilChessC = ilChessC
 
     def _ExtractDeviatingPixels(self):
+        # pylint: disable=too-many-branches
         pixCnt = 0
 
         while (
@@ -785,11 +786,13 @@ class MLX90640:  # pylint: disable=too-many-instance-attributes
                     raise RuntimeError("Adjacent broken and outlier pixels")
 
     def _UniqueListPairs(self, inputList):
+        # pylint: disable=no-self-use
         for i, listValue1 in enumerate(inputList):
             for listValue2 in inputList[i + 1 :]:
                 yield (listValue1, listValue2)
 
     def _ArePixelsAdjacent(self, pix1, pix2):
+        # pylint: disable=no-self-use, chained-comparison
         pixPosDif = pix1 - pix2
 
         if pixPosDif > -34 and pixPosDif < -30:
