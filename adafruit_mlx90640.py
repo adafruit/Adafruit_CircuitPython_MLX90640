@@ -266,6 +266,11 @@ class MLX90640:  # pylint: disable=too-many-instance-attributes
             )
 
         for pixelNumber in range(768):
+            if self._IsPixelBad(pixelNumber):
+                # print("Fixing broken pixel %d" % pixelNumber)
+                result[pixelNumber] = -273.15
+                continue
+
             ilPattern = pixelNumber // 32 - (pixelNumber // 64) * 2
             chessPattern = ilPattern ^ (pixelNumber - (pixelNumber // 2) * 2)
             conversionPattern = (
@@ -792,6 +797,12 @@ class MLX90640:  # pylint: disable=too-many-instance-attributes
         if pixPosDif > -2 and pixPosDif < 2:
             return True
         if pixPosDif > 30 and pixPosDif < 34:
+            return True
+
+        return False
+
+    def _IsPixelBad(self, pixel):
+        if pixel in self.brokenPixels or pixel in self.outlierPixels:
             return True
 
         return False
