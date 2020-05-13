@@ -792,14 +792,14 @@ class MLX90640:  # pylint: disable=too-many-instance-attributes
                 yield (listValue1, listValue2)
 
     def _ArePixelsAdjacent(self, pix1, pix2):
-        # pylint: disable=no-self-use, chained-comparison
+        # pylint: disable=no-self-use
         pixPosDif = pix1 - pix2
 
-        if pixPosDif > -34 and pixPosDif < -30:
+        if -34 < pixPosDif < -30:
             return True
-        if pixPosDif > -2 and pixPosDif < 2:
+        if -2 < pixPosDif < 2:
             return True
-        if pixPosDif > 30 and pixPosDif < 34:
+        if 30 < pixPosDif < 34:
             return True
 
         return False
