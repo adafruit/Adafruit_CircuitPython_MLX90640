@@ -2,9 +2,9 @@
    It will not work on microcontrollers running CircuitPython!"""
 
 import math
+from PIL import Image
 import board
 import adafruit_mlx90640
-from PIL import Image
 
 FILENAME = "mlx.jpg"
 
