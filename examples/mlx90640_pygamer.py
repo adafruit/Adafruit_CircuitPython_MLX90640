@@ -1,11 +1,11 @@
 import time
 import board
 import busio
-import adafruit_mlx90640
 import displayio
 import terminalio
 from adafruit_display_text.label import Label
 from simpleio import map_range
+import adafruit_mlx90640
 
 number_of_colors = 64  # Number of color in the gradian
 last_color = number_of_colors - 1  # Last color in palette
