@@ -96,8 +96,8 @@ class MLX90640:  # pylint: disable=too-many-instance-attributes
     cpAlpha = [0] * 2
     cpOffset = [0] * 2
     ilChessC = [0] * 3
-    brokenPixels = [0xFFFF] * 5
-    outlierPixels = [0xFFFF] * 5
+    brokenPixels = []
+    outlierPixels = []
     cpKta = 0
     cpKv = 0
 
@@ -266,6 +266,11 @@ class MLX90640:  # pylint: disable=too-many-instance-attributes
             )
 
         for pixelNumber in range(768):
+            if self._IsPixelBad(pixelNumber):
+                # print("Fixing broken pixel %d" % pixelNumber)
+                result[pixelNumber] = -273.15
+                continue
+
             ilPattern = pixelNumber // 32 - (pixelNumber // 64) * 2
             chessPattern = ilPattern ^ (pixelNumber - (pixelNumber // 2) * 2)
             conversionPattern = (
@@ -744,30 +749,66 @@ class MLX90640:  # pylint: disable=too-many-instance-attributes
         self.ilChessC = ilChessC
 
     def _ExtractDeviatingPixels(self):
-        self.brokenPixels = [0xFFFF] * 5
-        self.outlierPixels = [0xFFFF] * 5
-
+        # pylint: disable=too-many-branches
         pixCnt = 0
-        brokenPixCnt = 0
-        outlierPixCnt = 0
 
-        while (pixCnt < 768) and (brokenPixCnt < 5) and (outlierPixCnt < 5):
+        while (
+            (pixCnt < 768)
+            and (len(self.brokenPixels) < 5)
+            and (len(self.outlierPixels) < 5)
+        ):
             if eeData[pixCnt + 64] == 0:
-                self.brokenPixels[brokenPixCnt] = pixCnt
-                brokenPixCnt += 1
+                self.brokenPixels.append(pixCnt)
             elif (eeData[pixCnt + 64] & 0x0001) != 0:
-                self.outlierPixels[outlierPixCnt] = pixCnt
-                outlierPixCnt += 1
+                self.outlierPixels.append(pixCnt)
             pixCnt += 1
 
-        if brokenPixCnt > 4:
+        if len(self.brokenPixels) > 4:
             raise RuntimeError("More than 4 broken pixels")
-        if outlierPixCnt > 4:
+        if len(self.outlierPixels) > 4:
             raise RuntimeError("More than 4 outlier pixels")
-        if (brokenPixCnt + outlierPixCnt) > 4:
+        if (len(self.brokenPixels) + len(self.outlierPixels)) > 4:
             raise RuntimeError("More than 4 faulty pixels")
-        # print("Found %d broken pixels, %d outliers" % (brokenPixCnt, outlierPixCnt))
-        # TODO INCOMPLETE
+        # print("Found %d broken pixels, %d outliers"
+        #         % (len(self.brokenPixels), len(self.outlierPixels)))
+
+        for brokenPixel1, brokenPixel2 in self._UniqueListPairs(self.brokenPixels):
+            if self._ArePixelsAdjacent(brokenPixel1, brokenPixel2):
+                raise RuntimeError("Adjacent broken pixels")
+
+        for outlierPixel1, outlierPixel2 in self._UniqueListPairs(self.outlierPixels):
+            if self._ArePixelsAdjacent(outlierPixel1, outlierPixel2):
+                raise RuntimeError("Adjacent outlier pixels")
+
+        for brokenPixel in self.brokenPixels:
+            for outlierPixel in self.outlierPixels:
+                if self._ArePixelsAdjacent(brokenPixel, outlierPixel):
+                    raise RuntimeError("Adjacent broken and outlier pixels")
+
+    def _UniqueListPairs(self, inputList):
+        # pylint: disable=no-self-use
+        for i, listValue1 in enumerate(inputList):
+            for listValue2 in inputList[i + 1 :]:
+                yield (listValue1, listValue2)
+
+    def _ArePixelsAdjacent(self, pix1, pix2):
+        # pylint: disable=no-self-use
+        pixPosDif = pix1 - pix2
+
+        if -34 < pixPosDif < -30:
+            return True
+        if -2 < pixPosDif < 2:
+            return True
+        if 30 < pixPosDif < 34:
+            return True
+
+        return False
+
+    def _IsPixelBad(self, pixel):
+        if pixel in self.brokenPixels or pixel in self.outlierPixels:
+            return True
+
+        return False
 
     def _I2CWriteWord(self, writeAddress, data):
         cmd = bytearray(4)
