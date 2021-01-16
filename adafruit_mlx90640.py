@@ -1,24 +1,7 @@
-# The MIT License (MIT)
+# SPDX-FileCopyrightText: 2019 ladyada for Adafruit Industries
 #
-# Copyright (c) 2019 ladyada for Adafruit Industries
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-# THE SOFTWARE.
+# SPDX-License-Identifier: MIT
+
 """
 `adafruit_mlx90640`
 ================================================================================
@@ -116,7 +99,7 @@ class MLX90640:  # pylint: disable=too-many-instance-attributes
 
     @property
     def refresh_rate(self):
-        """ How fast the MLX90640 will spit out data. Start at lowest speed in
+        """How fast the MLX90640 will spit out data. Start at lowest speed in
         RefreshRate and then slowly increase I2C clock rate and rate until you
         max out. The sensor does not like it if the I2C host cannot 'keep up'!"""
         controlRegister = [0]
@@ -132,9 +115,9 @@ class MLX90640:  # pylint: disable=too-many-instance-attributes
         self._I2CWriteWord(0x800D, value)
 
     def getFrame(self, framebuf):
-        """ Request both 'halves' of a frame from the sensor, merge them
+        """Request both 'halves' of a frame from the sensor, merge them
         and calculate the temperature in C for each of 32x24 pixels. Placed
-        into the 768-element array passed in! """
+        into the 768-element array passed in!"""
         emissivity = 0.95
         tr = 23.15
         mlx90640Frame = [0] * 834
