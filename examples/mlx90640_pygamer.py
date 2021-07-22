@@ -77,10 +77,8 @@ for i in range(number_of_colors):
 # Create the super Group
 group = displayio.Group()
 
-min_label = Label(terminalio.FONT, max_glyphs=10, color=palette[0], x=0, y=110)
-max_label = Label(
-    terminalio.FONT, max_glyphs=10, color=palette[last_color], x=80, y=110
-)
+min_label = Label(terminalio.FONT, color=palette[0], x=0, y=110)
+max_label = Label(terminalio.FONT, color=palette[last_color], x=80, y=110)
 
 # Add all the sub-group to the SuperGroup
 group.append(image_group)
