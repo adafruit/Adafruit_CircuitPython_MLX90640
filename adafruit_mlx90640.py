@@ -82,7 +82,7 @@ class MLX90640:  # pylint: disable=too-many-instance-attributes
     cpKv = 0
 
     def __init__(self, i2c_bus, address=0x33):
-		# pylint: disable=import-outside-toplevel
+        # pylint: disable=import-outside-toplevel
         from adafruit_bus_device.i2c_device import I2CDevice
 
         self.i2c_device = I2CDevice(i2c_bus, address)
