@@ -24,7 +24,6 @@ Implementation Notes
 
 import struct
 import math
-import time
 
 __version__ = "0.0.0-auto.0"
 __repo__ = "https://github.com/adafruit/Adafruit_CircuitPython_MLX90640.git"
@@ -83,6 +82,7 @@ class MLX90640:  # pylint: disable=too-many-instance-attributes
     cpKv = 0
 
     def __init__(self, i2c_bus, address=0x33):
+		# pylint: disable=import-outside-toplevel
         from adafruit_bus_device.i2c_device import I2CDevice
 
         self.i2c_device = I2CDevice(i2c_bus, address)
@@ -805,7 +805,7 @@ class MLX90640:  # pylint: disable=too-many-instance-attributes
         cmd[1] = writeAddress & 0x00FF
         cmd[2] = data >> 8
         cmd[3] = data & 0x00FF
-        dataCheck = [0]
+        # dataCheck = [0]
 
         with self.i2c_device as i2c:
             i2c.write(cmd)
