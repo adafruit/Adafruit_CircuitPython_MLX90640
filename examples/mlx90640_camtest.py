@@ -79,7 +79,7 @@ def map_value(x, in_min, in_max, out_min, out_max):
 
 
 def gaussian(x, a, b, c, d=0):
-    return a * math.exp(-((x - b) ** 2) / (2 * c ** 2)) + d
+    return a * math.exp(-((x - b) ** 2) / (2 * c**2)) + d
 
 
 def gradient(x, width, cmap, spread=1):

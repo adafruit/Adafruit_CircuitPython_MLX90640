@@ -41,7 +41,7 @@ OPENAIR_TA_SHIFT = 8
 
 
 class RefreshRate:  # pylint: disable=too-few-public-methods
-    """ Enum-like class for MLX90640's refresh rate """
+    """Enum-like class for MLX90640's refresh rate"""
 
     REFRESH_0_5_HZ = 0b000  # 0.5Hz
     REFRESH_1_HZ = 0b001  # 1Hz
@@ -92,7 +92,7 @@ class MLX90640:  # pylint: disable=too-many-instance-attributes
 
     @property
     def serial_number(self):
-        """ 3-item tuple of hex values that are unique to each MLX90640 """
+        """3-item tuple of hex values that are unique to each MLX90640"""
         serialWords = [0, 0, 0]
         self._I2CReadWords(MLX90640_DEVICEID1, serialWords)
         return serialWords
