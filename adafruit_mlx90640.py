@@ -27,7 +27,7 @@ import math
 import time
 from adafruit_bus_device.i2c_device import I2CDevice
 
-__version__ = "0.0.0-auto.0"
+__version__ = "0.0.0+auto.0"
 __repo__ = "https://github.com/adafruit/Adafruit_CircuitPython_MLX90640.git"
 
 # We match the melexis library naming, and don't want to change
