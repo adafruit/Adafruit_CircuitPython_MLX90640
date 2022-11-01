@@ -776,11 +776,11 @@ class MLX90640:  # pylint: disable=too-many-instance-attributes
                 if self._ArePixelsAdjacent(brokenPixel, outlierPixel):
                     raise RuntimeError("Adjacent broken and outlier pixels")
 
-    def _UniqueListPairs(self, inputList) -> Iterator[Tuple[int, int]]:
+    def _UniqueListPairs(self, inputList: List[int]) -> Iterator[Tuple[int, int]]:
         # pylint: disable=no-self-use
         for i, listValue1 in enumerate(inputList):
             for listValue2 in inputList[i + 1 :]:
-                yield (listValue1, listValue2)
+                yield listValue1, listValue2
 
     def _ArePixelsAdjacent(self, pix1: int, pix2: int) -> bool:
         # pylint: disable=no-self-use
@@ -795,7 +795,7 @@ class MLX90640:  # pylint: disable=too-many-instance-attributes
 
         return False
 
-    def _IsPixelBad(self, pixel) -> bool:
+    def _IsPixelBad(self, pixel: int) -> bool:
         if pixel in self.brokenPixels or pixel in self.outlierPixels:
             return True
 
