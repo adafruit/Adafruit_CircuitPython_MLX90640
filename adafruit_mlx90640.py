@@ -28,7 +28,7 @@ import time
 from adafruit_bus_device.i2c_device import I2CDevice
 
 try:
-    from typing import Iterator, List, Optional, Tuple, Union
+    from typing import List, Optional, Tuple, Union
     from busio import I2C
 except ImportError:
     pass
@@ -776,7 +776,7 @@ class MLX90640:  # pylint: disable=too-many-instance-attributes
                 if self._ArePixelsAdjacent(brokenPixel, outlierPixel):
                     raise RuntimeError("Adjacent broken and outlier pixels")
 
-    def _UniqueListPairs(self, inputList: List[int]) -> Iterator[Tuple[int, int]]:
+    def _UniqueListPairs(self, inputList: List[int]) -> Tuple[int, int]:
         # pylint: disable=no-self-use
         for i, listValue1 in enumerate(inputList):
             for listValue2 in inputList[i + 1 :]:
