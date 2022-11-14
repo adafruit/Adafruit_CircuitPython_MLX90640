@@ -85,13 +85,13 @@ def gaussian(x, a, b, c, d=0):
 def gradient(x, width, cmap, spread=1):
     width = float(width)
     r = sum(
-        [gaussian(x, p[1][0], p[0] * width, width / (spread * len(cmap))) for p in cmap]
+        gaussian(x, p[1][0], p[0] * width, width / (spread * len(cmap))) for p in cmap
     )
     g = sum(
-        [gaussian(x, p[1][1], p[0] * width, width / (spread * len(cmap))) for p in cmap]
+        gaussian(x, p[1][1], p[0] * width, width / (spread * len(cmap))) for p in cmap
     )
     b = sum(
-        [gaussian(x, p[1][2], p[0] * width, width / (spread * len(cmap))) for p in cmap]
+        gaussian(x, p[1][2], p[0] * width, width / (spread * len(cmap))) for p in cmap
     )
     r = int(constrain(r * 255, 0, 255))
     g = int(constrain(g * 255, 0, 255))
