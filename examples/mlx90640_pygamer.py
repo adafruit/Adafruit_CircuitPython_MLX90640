@@ -87,7 +87,7 @@ group.append(min_label)
 group.append(max_label)
 
 # Add the SuperGroup to the Display
-board.DISPLAY.show(group)
+board.DISPLAY.root_group = group
 
 min_t = 20  # Initial minimum temperature range, before auto scale
 max_t = 37  # Initial maximum temperature range, before auto scale
