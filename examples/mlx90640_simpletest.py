@@ -10,6 +10,7 @@ PRINT_TEMPERATURES = False
 PRINT_ASCIIART = True
 
 i2c = busio.I2C(board.SCL, board.SDA, frequency=800000)
+# i2c = board.STEMMA_I2C()  # For using the built-in STEMMA QT connector on a microcontroller
 
 mlx = adafruit_mlx90640.MLX90640(i2c)
 print("MLX addr detected on I2C")

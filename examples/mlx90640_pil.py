@@ -17,7 +17,6 @@ COLORDEPTH = 1000  # how many color values we can have
 INTERPOLATE = 10  # scale factor for final image
 
 mlx = adafruit_mlx90640.MLX90640(board.I2C())  # uses board.SCL and board.SDA
-# i2c = board.STEMMA_I2C()  # For using the built-in STEMMA QT connector on a microcontroller
 
 # the list of colors we can choose from
 heatmap = (
