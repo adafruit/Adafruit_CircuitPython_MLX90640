@@ -93,6 +93,7 @@ min_t = 20  # Initial minimum temperature range, before auto scale
 max_t = 37  # Initial maximum temperature range, before auto scale
 
 i2c = busio.I2C(board.SCL, board.SDA, frequency=800000)
+# i2c = board.STEMMA_I2C()  # For using the built-in STEMMA QT connector on a microcontroller
 
 mlx = adafruit_mlx90640.MLX90640(i2c)
 print("MLX addr detected on I2C")

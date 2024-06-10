@@ -16,7 +16,7 @@ MAXTEMP = 45.0  # high range of the sensor (deg C)
 COLORDEPTH = 1000  # how many color values we can have
 INTERPOLATE = 10  # scale factor for final image
 
-mlx = adafruit_mlx90640.MLX90640(board.I2C())
+mlx = adafruit_mlx90640.MLX90640(board.I2C())  # uses board.SCL and board.SDA
 
 # the list of colors we can choose from
 heatmap = (
