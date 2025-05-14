@@ -22,13 +22,15 @@ Implementation Notes
 * Adafruit's Register library: https://github.com/adafruit/Adafruit_CircuitPython_Register
 """
 
-import struct
 import math
+import struct
 import time
+
 from adafruit_bus_device.i2c_device import I2CDevice
 
 try:
     from typing import List, Optional, Tuple, Union
+
     from busio import I2C
 except ImportError:
     pass
@@ -37,7 +39,6 @@ __version__ = "0.0.0+auto.0"
 __repo__ = "https://github.com/adafruit/Adafruit_CircuitPython_MLX90640.git"
 
 # We match the melexis library naming, and don't want to change
-# pylint: disable=invalid-name
 
 eeData = [0] * 832
 I2C_READ_LEN = 2048
@@ -46,7 +47,7 @@ MLX90640_DEVICEID1 = 0x2407
 OPENAIR_TA_SHIFT = 8
 
 
-class RefreshRate:  # pylint: disable=too-few-public-methods
+class RefreshRate:
     """Enum-like class for MLX90640's refresh rate"""
 
     REFRESH_0_5_HZ = 0b000  # 0.5Hz
@@ -59,7 +60,7 @@ class RefreshRate:  # pylint: disable=too-few-public-methods
     REFRESH_64_HZ = 0b111  # 64Hz
 
 
-class MLX90640:  # pylint: disable=too-many-instance-attributes
+class MLX90640:
     """Interface to the MLX90640 temperature sensor."""
 
     kVdd = 0
@@ -187,17 +188,14 @@ class MLX90640:  # pylint: disable=too-many-instance-attributes
             vdd -= 65536
 
         resolutionRAM = (frameData[832] & 0x0C00) >> 10
-        resolutionCorrection = math.pow(2, self.resolutionEE) / math.pow(
-            2, resolutionRAM
-        )
+        resolutionCorrection = math.pow(2, self.resolutionEE) / math.pow(2, resolutionRAM)
         vdd = (resolutionCorrection * vdd - self.vdd25) / self.kVdd + 3.3
 
         return vdd
 
     def _CalculateTo(
         self, frameData: List[int], emissivity: float, tr: float, result: List[float]
-    ) -> None:
-        # pylint: disable=too-many-locals, too-many-branches, too-many-statements
+    ) -> None:  # noqa: PLR0914
         subPage = frameData[833]
         alphaCorrR = [0] * 4
         irDataCP = [0, 0]
@@ -239,15 +237,11 @@ class MLX90640:  # pylint: disable=too-many-instance-attributes
             irDataCP[i] *= gain
 
         irDataCP[0] -= (
-            self.cpOffset[0]
-            * (1 + self.cpKta * (ta - 25))
-            * (1 + self.cpKv * (vdd - 3.3))
+            self.cpOffset[0] * (1 + self.cpKta * (ta - 25)) * (1 + self.cpKv * (vdd - 3.3))
         )
         if mode == self.calibrationModeEE:
             irDataCP[1] -= (
-                self.cpOffset[1]
-                * (1 + self.cpKta * (ta - 25))
-                * (1 + self.cpKv * (vdd - 3.3))
+                self.cpOffset[1] * (1 + self.cpKta * (ta - 25)) * (1 + self.cpKv * (vdd - 3.3))
             )
         else:
             irDataCP[1] -= (
@@ -284,11 +278,7 @@ class MLX90640:  # pylint: disable=too-many-instance-attributes
 
                 kta = self.kta[pixelNumber] / ktaScale
                 kv = self.kv[pixelNumber] / kvScale
-                irData -= (
-                    self.offset[pixelNumber]
-                    * (1 + kta * (ta - 25))
-                    * (1 + kv * (vdd - 3.3))
-                )
+                irData -= self.offset[pixelNumber] * (1 + kta * (ta - 25)) * (1 + kv * (vdd - 3.3))
 
                 if mode != self.calibrationModeEE:
                     irData += (
@@ -313,9 +303,7 @@ class MLX90640:  # pylint: disable=too-many-instance-attributes
                 To = (
                     math.sqrt(
                         math.sqrt(
-                            irData
-                            / (alphaCompensated * (1 - self.ksTo[1] * 273.15) + Sx)
-                            + taTr
+                            irData / (alphaCompensated * (1 - self.ksTo[1] * 273.15) + Sx) + taTr
                         )
                     )
                     - 273.15
@@ -346,8 +334,6 @@ class MLX90640:  # pylint: disable=too-many-instance-attributes
                 )
 
                 result[pixelNumber] = To
-
-    # pylint: enable=too-many-locals, too-many-branches, too-many-statements
 
     def _ExtractParameters(self) -> None:
         self._ExtractVDDParameters()
@@ -538,9 +524,7 @@ class MLX90640:  # pylint: disable=too-many-instance-attributes
                     alphaTemp[p] -= 64
                 alphaTemp[p] *= 1 << accRemScale
                 alphaTemp[p] += (
-                    alphaRef
-                    + (accRow[i] << accRowScale)
-                    + (accColumn[j] << accColumnScale)
+                    alphaRef + (accRow[i] << accRowScale) + (accColumn[j] << accColumnScale)
                 )
                 alphaTemp[p] /= math.pow(2, alphaScale)
                 alphaTemp[p] -= self.tgc * (self.cpAlpha[0] + self.cpAlpha[1]) / 2
@@ -603,12 +587,10 @@ class MLX90640:  # pylint: disable=too-many-instance-attributes
                     self.offset[p] -= 64
                 self.offset[p] *= 1 << occRemScale
                 self.offset[p] += (
-                    offsetRef
-                    + (occRow[i] << occRowScale)
-                    + (occColumn[j] << occColumnScale)
+                    offsetRef + (occRow[i] << occRowScale) + (occColumn[j] << occColumnScale)
                 )
 
-    def _ExtractKtaPixelParameters(self) -> None:  # pylint: disable=too-many-locals
+    def _ExtractKtaPixelParameters(self) -> None:
         # extract KtaPixel
         KtaRC = [0] * 4
         ktaTemp = [0] * 768
@@ -740,14 +722,9 @@ class MLX90640:  # pylint: disable=too-many-instance-attributes
         self.ilChessC = ilChessC
 
     def _ExtractDeviatingPixels(self) -> None:
-        # pylint: disable=too-many-branches
         pixCnt = 0
 
-        while (
-            (pixCnt < 768)
-            and (len(self.brokenPixels) < 5)
-            and (len(self.outlierPixels) < 5)
-        ):
+        while (pixCnt < 768) and (len(self.brokenPixels) < 5) and (len(self.outlierPixels) < 5):
             if eeData[pixCnt + 64] == 0:
                 self.brokenPixels.append(pixCnt)
             elif (eeData[pixCnt + 64] & 0x0001) != 0:
@@ -776,14 +753,12 @@ class MLX90640:  # pylint: disable=too-many-instance-attributes
                 if self._ArePixelsAdjacent(brokenPixel, outlierPixel):
                     raise RuntimeError("Adjacent broken and outlier pixels")
 
-    def _UniqueListPairs(self, inputList: List[int]) -> Tuple[int, int]:
-        # pylint: disable=no-self-use
+    def _UniqueListPairs(self, inputList: List[int]) -> Tuple[int, int]:  # noqa: PLR6301
         for i, listValue1 in enumerate(inputList):
             for listValue2 in inputList[i + 1 :]:
                 yield listValue1, listValue2
 
-    def _ArePixelsAdjacent(self, pix1: int, pix2: int) -> bool:
-        # pylint: disable=no-self-use
+    def _ArePixelsAdjacent(self, pix1: int, pix2: int) -> bool:  # noqa: PLR6301
         pixPosDif = pix1 - pix2
 
         if -34 < pixPosDif < -30:
@@ -835,13 +810,9 @@ class MLX90640:  # pylint: disable=too-many-instance-attributes
                 addrbuf[0] = addr >> 8  # MSB
                 addrbuf[1] = addr & 0xFF  # LSB
                 read_words = min(remainingWords, I2C_READ_LEN)
-                i2c.write_then_readinto(
-                    addrbuf, inbuf, in_end=read_words * 2
-                )  # in bytes
+                i2c.write_then_readinto(addrbuf, inbuf, in_end=read_words * 2)  # in bytes
                 # print("-> ", [hex(i) for i in addrbuf])
-                outwords = struct.unpack(
-                    ">" + "H" * read_words, inbuf[0 : read_words * 2]
-                )
+                outwords = struct.unpack(">" + "H" * read_words, inbuf[0 : read_words * 2])
                 # print("<- (", read_words, ")", [hex(i) for i in outwords])
                 for i, w in enumerate(outwords):
                     buffer[offset + i] = w

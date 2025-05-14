@@ -2,11 +2,13 @@
 # SPDX-License-Identifier: MIT
 
 """This example is for Raspberry Pi (Linux) only!
-   It will not work on microcontrollers running CircuitPython!"""
+It will not work on microcontrollers running CircuitPython!"""
 
 import math
-from PIL import Image
+
 import board
+from PIL import Image
+
 import adafruit_mlx90640
 
 FILENAME = "mlx.jpg"
@@ -47,15 +49,9 @@ def gaussian(x, a, b, c, d=0):
 
 def gradient(x, width, cmap, spread=1):
     width = float(width)
-    r = sum(
-        gaussian(x, p[1][0], p[0] * width, width / (spread * len(cmap))) for p in cmap
-    )
-    g = sum(
-        gaussian(x, p[1][1], p[0] * width, width / (spread * len(cmap))) for p in cmap
-    )
-    b = sum(
-        gaussian(x, p[1][2], p[0] * width, width / (spread * len(cmap))) for p in cmap
-    )
+    r = sum(gaussian(x, p[1][0], p[0] * width, width / (spread * len(cmap))) for p in cmap)
+    g = sum(gaussian(x, p[1][1], p[0] * width, width / (spread * len(cmap))) for p in cmap)
+    b = sum(gaussian(x, p[1][2], p[0] * width, width / (spread * len(cmap))) for p in cmap)
     r = int(constrain(r * 255, 0, 255))
     g = int(constrain(g * 255, 0, 255))
     b = int(constrain(b * 255, 0, 255))

@@ -2,17 +2,17 @@
 # SPDX-License-Identifier: MIT
 
 """This example is for Raspberry Pi (Linux) only!
-   It will not work on microcontrollers running CircuitPython!"""
+It will not work on microcontrollers running CircuitPython!"""
 
-
-import os
-import math
-import time
 import argparse
-from PIL import Image
-import pygame
+import math
+import os
+import time
+
 import board
 import busio
+import pygame
+from PIL import Image
 
 import adafruit_mlx90640
 
@@ -48,9 +48,7 @@ pygame.init()
 if not args.windowed:
     screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
 else:
-    screen = pygame.display.set_mode(
-        [32 * WINDOW_SCALING_FACTOR, 24 * WINDOW_SCALING_FACTOR]
-    )
+    screen = pygame.display.set_mode([32 * WINDOW_SCALING_FACTOR, 24 * WINDOW_SCALING_FACTOR])
 print(pygame.display.Info())
 
 # the list of colors we can choose from
@@ -85,15 +83,9 @@ def gaussian(x, a, b, c, d=0):
 
 def gradient(x, width, cmap, spread=1):
     width = float(width)
-    r = sum(
-        gaussian(x, p[1][0], p[0] * width, width / (spread * len(cmap))) for p in cmap
-    )
-    g = sum(
-        gaussian(x, p[1][1], p[0] * width, width / (spread * len(cmap))) for p in cmap
-    )
-    b = sum(
-        gaussian(x, p[1][2], p[0] * width, width / (spread * len(cmap))) for p in cmap
-    )
+    r = sum(gaussian(x, p[1][0], p[0] * width, width / (spread * len(cmap))) for p in cmap)
+    g = sum(gaussian(x, p[1][1], p[0] * width, width / (spread * len(cmap))) for p in cmap)
+    b = sum(gaussian(x, p[1][2], p[0] * width, width / (spread * len(cmap))) for p in cmap)
     r = int(constrain(r * 255, 0, 255))
     g = int(constrain(g * 255, 0, 255))
     b = int(constrain(b * 255, 0, 255))
