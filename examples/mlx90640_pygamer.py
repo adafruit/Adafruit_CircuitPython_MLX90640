@@ -2,12 +2,14 @@
 # SPDX-License-Identifier: MIT
 
 import time
+
 import board
 import busio
 import displayio
 import terminalio
 from adafruit_display_text.label import Label
 from simpleio import map_range
+
 import adafruit_mlx90640
 
 number_of_colors = 64  # Number of color in the gradian
@@ -43,15 +45,9 @@ def MakeHeatMapColor():
         else:
             idx2 = idx1 + 1  # ... and before this index (inclusive).
             fractBetween = value - idx1  # Distance between the two indexes (0-1).
-            red = int(
-                round((color[idx2][0] - color[idx1][0]) * fractBetween + color[idx1][0])
-            )
-            green = int(
-                round((color[idx2][1] - color[idx1][1]) * fractBetween + color[idx1][1])
-            )
-            blue = int(
-                round((color[idx2][2] - color[idx1][2]) * fractBetween + color[idx1][2])
-            )
+            red = int(round((color[idx2][0] - color[idx1][0]) * fractBetween + color[idx1][0]))
+            green = int(round((color[idx2][1] - color[idx1][1]) * fractBetween + color[idx1][1]))
+            blue = int(round((color[idx2][2] - color[idx1][2]) * fractBetween + color[idx1][2]))
         palette[c] = (0x010000 * red) + (0x000100 * green) + (0x000001 * blue)
 
 

@@ -2,8 +2,10 @@
 # SPDX-License-Identifier: MIT
 
 import time
+
 import board
 import busio
+
 import adafruit_mlx90640
 
 PRINT_TEMPERATURES = False
@@ -34,7 +36,6 @@ while True:
                 print("%0.1f, " % t, end="")
             if PRINT_ASCIIART:
                 c = "&"
-                # pylint: disable=multiple-statements
                 if t < 20:
                     c = " "
                 elif t < 23:
@@ -53,7 +54,6 @@ while True:
                     c = "#"
                 elif t < 37:
                     c = "X"
-                # pylint: enable=multiple-statements
                 print(c, end="")
         print()
     print()
