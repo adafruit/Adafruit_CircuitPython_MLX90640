@@ -33,7 +33,7 @@ while True:
         for w in range(32):
             t = frame[h * 32 + w]
             if PRINT_TEMPERATURES:
-                print("%0.1f, " % t, end="")
+                print(f"{t:0.1f}, ", end="")
             if PRINT_ASCIIART:
                 c = "&"
                 if t < 20:

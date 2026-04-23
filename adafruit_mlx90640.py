@@ -204,11 +204,11 @@ class MLX90640:
         ta = self._GetTa(frameData)
 
         ta4 = ta + 273.15
-        ta4 = ta4 * ta4
-        ta4 = ta4 * ta4
+        ta4 *= ta4
+        ta4 *= ta4
         tr4 = tr + 273.15
-        tr4 = tr4 * tr4
-        tr4 = tr4 * tr4
+        tr4 *= tr4
+        tr4 *= tr4
         taTr = tr4 - (tr4 - ta4) / emissivity
 
         ktaScale = math.pow(2, self.ktaScale)
@@ -286,7 +286,7 @@ class MLX90640:
                         - self.ilChessC[1] * conversionPattern
                     )
 
-                irData = irData - self.tgc * irDataCP[subPage]
+                irData -= self.tgc * irDataCP[subPage]
                 irData /= emissivity
 
                 alphaCompensated = SCALEALPHA * alphaScale / self.alpha[pixelNumber]
@@ -702,7 +702,7 @@ class MLX90640:
         ilChessC = [0] * 3
 
         self.calibrationModeEE = (eeData[10] & 0x0800) >> 4
-        self.calibrationModeEE = self.calibrationModeEE ^ 0x80
+        self.calibrationModeEE ^= 0x80
 
         ilChessC[0] = eeData[53] & 0x003F
         if ilChessC[0] > 31:

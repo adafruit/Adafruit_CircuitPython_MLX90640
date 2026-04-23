@@ -116,15 +116,13 @@ while True:
     for h in range(24):
         for w in range(32):
             t = frame[h * 32 + w]
-            if t > maxi:
-                maxi = t
-            if t < mini:
-                mini = t
+            maxi = max(maxi, t)
+            mini = min(mini, t)
             image_bitmap[w, (23 - h)] = int(map_range(t, min_t, max_t, 0, last_color))
 
-    min_label.text = "%0.2f" % (min_t)
+    min_label.text = f"{min_t:0.2f}"
 
-    max_string = "%0.2f" % (max_t)
+    max_string = f"{max_t:0.2f}"
     max_label.x = 120 - (5 * len(max_string))  # Tricky calculation to left align
     max_label.text = max_string
 

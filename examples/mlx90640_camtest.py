@@ -142,6 +142,6 @@ while True:
     if args.windowed:
         pygame.event.pump()
     print(
-        "Completed 2 frames in %0.2f s (%d FPS)"
-        % (time.monotonic() - stamp, 1.0 / (time.monotonic() - stamp))
+        f"Completed 2 frames in {time.monotonic() - stamp:0.2f} s "
+        f"({int(1.0 / (time.monotonic() - stamp)):d} FPS)"
     )
